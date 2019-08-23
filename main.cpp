@@ -109,13 +109,13 @@ string mSteer(int rectWidth, int rectHeight, int gapLength, int gapHeight, strin
     output+= "<h2> Steering </h2>\n";
     output+= "<p> Draw a line from left to right between the blocks without touching them. </p>\n";
     output+= "<div id=\"div1\">\n";
-    output+= "<img id=\"click1\" src=\"images/black.png\" class=\"rectangle\">\n";
+    output+= "<img id=\"click1\" src=\"images/purple.png\" class=\"rectangle\">\n";
     output+= "</div>\n";
     output+= "<div id=\"div2\">\n";
-    output+= "<img id=\"click2\" src=\"images/black.png\" class=\"rectangle\">\n";
+    output+= "<img id=\"click2\" src=\"images/purple.png\" class=\"rectangle\">\n";
     output+= "<script>\n";
     output+= "function nextStage() {\n";
-    sprintf(buffer, "if (currX > 0.5*(canvas.width + %d)) {open(\"%s\", \"_self\") }}", rectWidth, &nextStage[0]);
+    sprintf(buffer, "if (currX > 0.5*(canvas.width + %d)) { console.log(Math.floor(new Date().getTime()/1000.0) + \".\" + new Date().getTime()%%1000 + \",steer,\" + %d + \"px,\" + %d + \"px\"); open(\"%s\", \"_self\") }}", rectWidth, gapLength, rectWidth, &nextStage[0]);
     output+= buffer;
     output+= "</script>\n";
     output+= "</div>\n</body>\n</html>\n";
@@ -164,7 +164,7 @@ string mClick(int rectWidth, int rectHeight, int gapLength, string nextStage){
     output+= "</body>\n";
     output+= "<script type=\"text/javascript\" src=\"click.js\"> </script>\n";
     output+= "<script>\n";
-    sprintf(buffer, "document.getElementById('div2').onclick = function nextStage() { if (document.getElementById('click1').src == document.getElementById('click2').src){ open(\"%s\", \"_self\"); } }\n", &nextStage[0]);
+    sprintf(buffer, "document.getElementById('div2').onclick = function nextStage() { if (document.getElementById('click1').src == document.getElementById('click2').src){ console.log(Math.floor(new Date().getTime()/1000.0) + \".\" + new Date().getTime()%%1000 + \",click,\" + %d + \"px,\" + %d + \"px\"); open(\"%s\", \"_self\"); } }\n", gapLength, rectWidth, &nextStage[0]);
     output+= buffer;
     output+= "</script>\n";
     output+= "</html>\n";
@@ -213,7 +213,7 @@ string mDrag(int rectWidth, int rectHeight, int gapLength, string nextStage) {
     output+= "</div>\n";
     output+= "</body>\n";
     output+= "<script type=\"text/javascript\" src=\"drag.js\"> </script>\n";
-    sprintf(buffer, "<script> function nextStage() { open(\"%s\", \"_self\"); } </script>\n", &nextStage[0]);
+    sprintf(buffer, "<script> function nextStage() { console.log(Math.floor(new Date().getTime()/1000.0) + \".\" + new Date().getTime()%%1000 + \",drag,\" + %d + \"px,\" + %d + \"px\"); open(\"%s\", \"_self\"); } </script>\n", gapLength, rectWidth, &nextStage[0]);
     output+= buffer;
     output+= "</html>\n";
     free(buffer);
