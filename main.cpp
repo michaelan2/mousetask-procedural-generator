@@ -17,12 +17,6 @@ string mDrag(int rectWidth, int rectHeight, int gapLength, string nextStage);
 int* generateRandomOrderArray(int num);
 
 int main(int argc, const char * argv[]) {
-    // insert code here...
-    string test = "test";
-    test += "\n";
-    cout << "Hello, World!\n";
-    //printf(&test[0]);
-    //cout << mDrag(100, 200, 20, "mousedraw.html");
     //be sure that the nums array has same number of elements as the nested loop below produces
     int* nums = generateRandomOrderArray(60);
     int currentnum = 0;
@@ -35,21 +29,31 @@ int main(int argc, const char * argv[]) {
             sprintf(next, "%d.html", nums[currentnum] + 1);
             FILE* steer = fopen(curr, "w");
             fprintf(steer, "%s", &mSteer(l, 200, l, 2*w, next)[0]);
+            fclose(steer);
             currentnum++;
             sprintf(curr, "%d.html", nums[currentnum]);
             sprintf(next, "%d.html", nums[currentnum] + 1);
             FILE* click = fopen(curr, "w");
             fprintf(click, "%s", &mClick(w, 200, l, next)[0]);
+            fclose(click);
             currentnum++;
             sprintf(curr, "%d.html", nums[currentnum]);
             sprintf(next, "%d.html", nums[currentnum] + 1);
             FILE* drag = fopen(curr, "w");
             fprintf(drag, "%s", &mDrag(w, 200, l, next)[0]);
             currentnum++;
+            fclose(drag);
             free(curr);
             free(next);
         }
     }
+    char* final = (char*) malloc(100);
+    sprintf(final, "%d.html", currentnum);
+    FILE* end = fopen(final, "w");
+    fprintf(end, "<html>\n<h1>Task finished!</h1>\n</html>\n");
+    fclose(end);
+    free(final);
+    
     /*
     for (int i = 0; i < 4; i++, w*=2){
         char* curr = (char*) malloc(100);
@@ -226,7 +230,18 @@ int* generateRandomOrderArray(int num){
     for (int i = 0; i < num; i++){
         output[i] = i;
     }
-    random_shuffle(output, output + num - 1);
+    //srand(unsigned(time(NULL))); doesn't actually seed random_shuffle; looks like it's independent
+    //random_shuffle(output, output + num - 1);
+    
+    //manually implement fisher-yates shuffle
+    srand(time(NULL));
+    for (int i = num - 1; i > 0; --i){
+        int j = rand() % (i+1);
+        int t = output[i];
+        output[i] = output[j];
+        output[j] = t;
+    }
+    
     for (int i = 0; i < num; i++){
         printf("%d\n", output[i]);
     }
