@@ -22,8 +22,35 @@ int main(int argc, const char * argv[]) {
     cout << "Hello, World!\n";
     //printf(&test[0]);
     cout << mDrag(100, 200, 20, "mousedraw.html");
-    int nums[] = {1, 2, 3, 4, 5};
+    int nums[] = {1, 2, 3, 4, 5, 6, 7,8,9,10,11,12,13,14,15,16,17,18,19,20,21};
+    int currentnum = 0;
+    
+    int l = 64;
     int w = 8;
+    for (int l = 64; l < 128 + 1; l*= 2){
+        for (int w = 8; w < 32 + 1; w*=2){
+            char* curr = (char*) malloc(100);
+            char* next = (char*) malloc(100);
+            sprintf(curr, "%d.html", nums[currentnum]);
+            sprintf(next, "%d.html", nums[currentnum+1]);
+            FILE* steer = fopen(curr, "w");
+            fprintf(steer, "%s", &mSteer(l, 100, l, w, next)[0]);
+            currentnum++;
+            sprintf(curr, "%d.html", nums[currentnum]);
+            sprintf(next, "%d.html", nums[currentnum+1]);
+            FILE* click = fopen(curr, "w");
+            fprintf(click, "%s", &mClick(w, 100, l, next)[0]);
+            currentnum++;
+            sprintf(curr, "%d.html", nums[currentnum]);
+            sprintf(next, "%d.html", nums[currentnum+1]);
+            FILE* drag = fopen(curr, "w");
+            fprintf(drag, "%s", &mDrag(w, 100, l, next)[0]);
+            currentnum++;
+            free(curr);
+            free(next);
+        }
+    }
+    /*
     for (int i = 0; i < 4; i++, w*=2){
         char* curr = (char*) malloc(100);
         char* next = (char*) malloc(100);
@@ -32,7 +59,7 @@ int main(int argc, const char * argv[]) {
         FILE* outputFile = fopen(curr, "w");
         fprintf(outputFile, "%s", &mSteer(800, 100, 800, w, next)[0]);
     }
-    
+    */
     /*
     FILE* outputFile = fopen("outputFile", "w");
     if (outputFile == NULL) {
@@ -88,7 +115,7 @@ string mSteer(int rectWidth, int rectHeight, int gapLength, int gapHeight, strin
     output+= "<img id=\"click2\" src=\"images/black.png\" class=\"rectangle\">\n";
     output+= "<script>\n";
     output+= "function nextStage() {\n";
-    sprintf(buffer, "open(\"%s\", \"_self\") }", &nextStage[0]);
+    sprintf(buffer, "if (currX > 0.5*(canvas.width + %d)) {open(\"%s\", \"_self\") }}", rectWidth, &nextStage[0]);
     output+= buffer;
     output+= "</script>\n";
     output+= "</div>\n</body>\n</html>\n";
@@ -136,7 +163,8 @@ string mClick(int rectWidth, int rectHeight, int gapLength, string nextStage){
     output+= "</body>\n";
     output+= "<script type=\"text/javascript\" src=\"click.js\"> </script>\n";
     output+= "<script>\n";
-    output+= "document.getElementById('click2').onclick = function nextStage() { open(\"mousedrag.html\", \"_self\"); }\n";
+    sprintf(buffer, "document.getElementById('click2').onclick = function nextStage() { open(\"%s\", \"_self\"); }\n", &nextStage[0]);
+    output+= buffer;
     output+= "</script>\n";
     output+= "</html>\n";
     free(buffer);
