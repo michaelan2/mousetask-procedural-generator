@@ -8,12 +8,13 @@
 
 #include <iostream>
 #include <string>
+#include <algorithm>    // std::random_shuffle
 using namespace std;
 
 string mSteer(int rectWidth, int rectHeight, int gapLength, int gapHeight, string nextStage);
 string mClick(int rectWidth, int rectHeight, int gapLength, string nextStage);
 string mDrag(int rectWidth, int rectHeight, int gapLength, string nextStage);
-
+int* generateRandomOrderArray(int num);
 
 int main(int argc, const char * argv[]) {
     // insert code here...
@@ -21,30 +22,29 @@ int main(int argc, const char * argv[]) {
     test += "\n";
     cout << "Hello, World!\n";
     //printf(&test[0]);
-    cout << mDrag(100, 200, 20, "mousedraw.html");
-    int nums[] = {1, 2, 3, 4, 5, 6, 7,8,9,10,11,12,13,14,15,16,17,18,19,20,21};
+    //cout << mDrag(100, 200, 20, "mousedraw.html");
+    //be sure that the nums array has same number of elements as the nested loop below produces
+    int* nums = generateRandomOrderArray(60);
     int currentnum = 0;
     
-    int l = 64;
-    int w = 8;
-    for (int l = 64; l < 128 + 1; l*= 2){
-        for (int w = 8; w < 32 + 1; w*=2){
+    for (int l = 64; l <= 1024; l*= 2){
+        for (int w = 8; w <= 64; w*= 2){
             char* curr = (char*) malloc(100);
             char* next = (char*) malloc(100);
             sprintf(curr, "%d.html", nums[currentnum]);
-            sprintf(next, "%d.html", nums[currentnum+1]);
+            sprintf(next, "%d.html", nums[currentnum] + 1);
             FILE* steer = fopen(curr, "w");
-            fprintf(steer, "%s", &mSteer(l, 100, l, w, next)[0]);
+            fprintf(steer, "%s", &mSteer(l, 200, l, 2*w, next)[0]);
             currentnum++;
             sprintf(curr, "%d.html", nums[currentnum]);
-            sprintf(next, "%d.html", nums[currentnum+1]);
+            sprintf(next, "%d.html", nums[currentnum] + 1);
             FILE* click = fopen(curr, "w");
-            fprintf(click, "%s", &mClick(w, 100, l, next)[0]);
+            fprintf(click, "%s", &mClick(w, 200, l, next)[0]);
             currentnum++;
             sprintf(curr, "%d.html", nums[currentnum]);
-            sprintf(next, "%d.html", nums[currentnum+1]);
+            sprintf(next, "%d.html", nums[currentnum] + 1);
             FILE* drag = fopen(curr, "w");
-            fprintf(drag, "%s", &mDrag(w, 100, l, next)[0]);
+            fprintf(drag, "%s", &mDrag(w, 200, l, next)[0]);
             currentnum++;
             free(curr);
             free(next);
@@ -107,7 +107,7 @@ string mSteer(int rectWidth, int rectHeight, int gapLength, int gapHeight, strin
     output+= "<canvas id=\"can\" style=\"position:absolute;\">\n";
     output+= "</canvas>\n";
     output+= "<h2> Steering </h2>\n";
-    output+= "<p> Move to the left zone, click and hold to draw, and draw a line to the right zone without touching the walls </p>\n";
+    output+= "<p> Draw a line from left to right between the blocks without touching them. </p>\n";
     output+= "<div id=\"div1\">\n";
     output+= "<img id=\"click1\" src=\"images/black.png\" class=\"rectangle\">\n";
     output+= "</div>\n";
@@ -137,6 +137,7 @@ string mClick(int rectWidth, int rectHeight, int gapLength, string nextStage){
     output+= "img.rectangle {";
     sprintf(buffer, "width: %dpx; height: %dpx;}\n", rectWidth, rectHeight);
     output+= buffer;
+    output+= "div:hover{ cursor: pointer; }\n";
     output+= "#div1 {\n";
     output+= "position:absolute;\n";
     sprintf(buffer, "left:calc(50%% - 0.5 * (%dpx + %dpx));\n", rectWidth, gapLength);
@@ -163,7 +164,7 @@ string mClick(int rectWidth, int rectHeight, int gapLength, string nextStage){
     output+= "</body>\n";
     output+= "<script type=\"text/javascript\" src=\"click.js\"> </script>\n";
     output+= "<script>\n";
-    sprintf(buffer, "document.getElementById('click2').onclick = function nextStage() { open(\"%s\", \"_self\"); }\n", &nextStage[0]);
+    sprintf(buffer, "document.getElementById('div2').onclick = function nextStage() { if (document.getElementById('click1').src == document.getElementById('click2').src){ open(\"%s\", \"_self\"); } }\n", &nextStage[0]);
     output+= buffer;
     output+= "</script>\n";
     output+= "</html>\n";
@@ -186,6 +187,7 @@ string mDrag(int rectWidth, int rectHeight, int gapLength, string nextStage) {
     output+= "img.rectangle {";
     sprintf(buffer, "width: %dpx; height: %dpx;}\n", rectWidth, rectHeight);
     output+= buffer;
+    output+= "#div1:hover { cursor:grab; }\n";
     output+= "#div1 {\n";
     output+= "position:absolute;\n";
     sprintf(buffer, "left:calc(50%% - 0.5 * (%dpx + %dpx));\n", rectWidth, gapLength);
@@ -203,7 +205,7 @@ string mDrag(int rectWidth, int rectHeight, int gapLength, string nextStage) {
     output+= "<body>\n";
     output+= "<h2>Drag and Drop</h2>\n";
     output+= "<p>Drag the left block over to the right block and drop it off inside.</p>\n";
-    output+= "<div id=\"div1\" class=\"rectangle\" ondrop=\"drop(event)\" ondragover=\"allowDrop(event)\">\n";
+    output+= "<div id=\"div1\" class=\"rectangle\">\n";
     output+= "<img src=\"images/green.png\" draggable=\"true\" ondragstart=\"drag(event)\" id=\"drag1\" class=\"rectangle\">\n";
     output+= "</div>\n";
     output+= "<div id=\"div2\" class=\"rectangle\" ondrop=\"drop(event)\" ondragover=\"allowDrop(event)\">\n";
@@ -219,4 +221,14 @@ string mDrag(int rectWidth, int rectHeight, int gapLength, string nextStage) {
     return output;
 }
 
-
+int* generateRandomOrderArray(int num){
+    int* output = (int*) malloc(num * sizeof(int));
+    for (int i = 0; i < num; i++){
+        output[i] = i;
+    }
+    random_shuffle(output, output + num - 1);
+    for (int i = 0; i < num; i++){
+        printf("%d\n", output[i]);
+    }
+    return output;
+}
