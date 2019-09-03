@@ -11,40 +11,83 @@
 #include <algorithm>    // std::random_shuffle
 using namespace std;
 
+//order of tasks: 1.starting page for tutorial 2.tutorial 3.starting page for task 4.tasks 5.ending page
+string startTutorial(string nextStage);
+string startTask(string nextStage);
 string mSteer(int rectWidth, int rectHeight, int gapLength, int gapHeight, string nextStage);
 string mClick(int rectWidth, int rectHeight, int gapLength, string nextStage);
 string mDrag(int rectWidth, int rectHeight, int gapLength, string nextStage);
 int* generateRandomOrderArray(int num);
 
 int main(int argc, const char * argv[]) {
-    //be sure that the nums array has same number of elements as the nested loop below produces
-    int* nums = generateRandomOrderArray(60);
-    int currentnum = 0;
+    //generate starting page and tutorial
+    char* t1name = (char*) malloc(24);
+    char* t2name = (char*) malloc(24);
+    char* t3name = (char*) malloc(24);
+    char* startTutPage = (char*) malloc(24);
+    char* startTaskPage = (char*) malloc(24);
+    sprintf(startTutPage, "%s.html", "startTut");
+    sprintf(t1name, "%s.html", "tut1");
+    sprintf(t2name, "%s.html", "tut2");
+    sprintf(t3name, "%s.html", "tut3");
+    sprintf(startTaskPage, "%s.html", "startTask");
     
-    for (int l = 64; l <= 1024; l*= 2){
-        for (int w = 8; w <= 64; w*= 2){
-            char* curr = (char*) malloc(100);
-            char* next = (char*) malloc(100);
-            sprintf(curr, "%d.html", nums[currentnum]);
-            sprintf(next, "%d.html", nums[currentnum] + 1);
-            FILE* steer = fopen(curr, "w");
-            fprintf(steer, "%s", &mSteer(l, 200, l, 2*w, next)[0]);
-            fclose(steer);
-            currentnum++;
-            sprintf(curr, "%d.html", nums[currentnum]);
-            sprintf(next, "%d.html", nums[currentnum] + 1);
-            FILE* click = fopen(curr, "w");
-            fprintf(click, "%s", &mClick(w, 200, l, next)[0]);
-            fclose(click);
-            currentnum++;
-            sprintf(curr, "%d.html", nums[currentnum]);
-            sprintf(next, "%d.html", nums[currentnum] + 1);
-            FILE* drag = fopen(curr, "w");
-            fprintf(drag, "%s", &mDrag(w, 200, l, next)[0]);
-            currentnum++;
-            fclose(drag);
-            free(curr);
-            free(next);
+    FILE* startTutFile = fopen(startTutPage, "w");
+    fprintf(startTutFile, "%s", &startTutorial(t1name)[0]);
+    
+    FILE* t1file = fopen(t1name, "w");
+    fprintf(t1file, "%s", &mSteer(200, 200, 200, 200, t2name)[0]);
+    
+    FILE* t2file = fopen(t2name, "w");
+    fprintf(t2file, "%s", &mClick(200, 200, 200, t3name)[0]);
+    
+    FILE* t3file = fopen(t3name, "w");
+    fprintf(t3file, "%s", &mDrag(200, 200, 200, startTaskPage)[0]);
+    
+    FILE* startTaskFile = fopen(startTaskPage, "w");
+    fprintf(startTaskFile, "%s", &startTask("0.html")[0]);
+    fclose(startTutFile);
+    fclose(t1file);
+    fclose(t2file);
+    fclose(t3file);
+    fclose(startTaskFile);
+    free(startTutPage);
+    free(t1name);
+    free(t2name);
+    free(t3name);
+    free(startTaskPage);
+    
+    
+    //generate 120 (60 variations x 2 repetitions each) tasks in random order
+    //be sure that the nums array has same number of elements as the nested loop below produces
+    int* nums = generateRandomOrderArray(120);
+    int currentnum = 0;
+    for (int rep = 0; rep <= 1; rep++){
+        for (int l = 64; l <= 1024; l*= 2){
+            for (int w = 8; w <= 64; w*= 2){
+                char* curr = (char*) malloc(100);
+                char* next = (char*) malloc(100);
+                sprintf(curr, "%d.html", nums[currentnum]);
+                sprintf(next, "%d.html", nums[currentnum] + 1);
+                FILE* steer = fopen(curr, "w");
+                fprintf(steer, "%s", &mSteer(l, 200, l, 2*w, next)[0]);
+                fclose(steer);
+                currentnum++;
+                sprintf(curr, "%d.html", nums[currentnum]);
+                sprintf(next, "%d.html", nums[currentnum] + 1);
+                FILE* click = fopen(curr, "w");
+                fprintf(click, "%s", &mClick(w, 200, l, next)[0]);
+                fclose(click);
+                currentnum++;
+                sprintf(curr, "%d.html", nums[currentnum]);
+                sprintf(next, "%d.html", nums[currentnum] + 1);
+                FILE* drag = fopen(curr, "w");
+                fprintf(drag, "%s", &mDrag(w, 200, l, next)[0]);
+                currentnum++;
+                fclose(drag);
+                free(curr);
+                free(next);
+            }
         }
     }
     char* final = (char*) malloc(100);
@@ -75,6 +118,27 @@ int main(int argc, const char * argv[]) {
     }
      */
     return 0;
+}
+
+string startTutorial(string nextStage){
+    string output = "";
+    
+    char* buffer = (char*) malloc(1024);
+    sprintf(buffer, "<html> <a href=\"%s\"> <font size=\"80\"> Stop! When instructed, click here to move onto the tutorial </font> </a> </html>\n", &nextStage[0]);
+    output+= buffer;
+    free(buffer);
+    return output;
+}
+
+string startTask(string nextStage){
+    string output = "";
+    
+    char* buffer = (char*) malloc(1024);
+    sprintf(buffer, "<html> <a id=\"link0\" href=\"%s\"> <font size=\"80\"> Stop! When instructed, click here to move onto the clicking tasks </font> </a> </html>\n", &nextStage[0]);
+    output+= buffer;
+    output+= "<script> document.getElementById('link0').onclick = function logTime() { console.log(Math.floor(new Date().getTime()/1000.0) + \".\" + new Date().getTime()%1000 + \",start,\" + 0 + \"px,\" + 0 + \"px\"); } </script>";
+    free(buffer);
+    return output;
 }
 
 string mSteer(int rectWidth, int rectHeight, int gapLength, int gapHeight, string nextStage){
@@ -208,7 +272,7 @@ string mDrag(int rectWidth, int rectHeight, int gapLength, string nextStage) {
     output+= "</head>\n";
     output+= "<body>\n";
     output+= "<h2>Drag and Drop</h2>\n";
-    output+= "<p>Drag the left block over to the right block and drop it off inside.</p>\n";
+    output+= "<p>Drag the left block and drop it inside the right block.</p>\n";
     output+= "<div id=\"div1\" class=\"rectangle\">\n";
     output+= "<img src=\"images/green.png\" draggable=\"true\" ondragstart=\"drag(event)\" id=\"drag1\" class=\"rectangle\">\n";
     output+= "</div>\n";
@@ -233,7 +297,7 @@ int* generateRandomOrderArray(int num){
     //srand(unsigned(time(NULL))); doesn't actually seed random_shuffle; looks like it's independent
     //random_shuffle(output, output + num - 1);
     
-    //manually implement fisher-yates shuffle
+    //manually implement fisher-yates shuffle on array of numbers
     srand(time(NULL));
     for (int i = num - 1; i > 0; --i){
         int j = rand() % (i+1);
