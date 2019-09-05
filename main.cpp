@@ -183,7 +183,7 @@ string mSteer(int rectWidth, int rectHeight, int gapLength, int gapHeight, strin
     output+= "<img id=\"click2\" src=\"images/purple.png\" class=\"rectangle\">\n";
     output+= "<script>\n";
     output+= "function nextStage() {\n";
-    sprintf(buffer, "if (currX > 0.5*(canvas.width + %d)) { console.log(Math.floor(new Date().getTime()/1000.0) + \".\" + new Date().getTime()%%1000 + \",steer,\" + %d + \"px,\" + %d + \"px\"); open(\"%s\", \"_self\") }}", rectWidth, gapLength, rectWidth, &nextStage[0]);
+    sprintf(buffer, "if (currX > 0.5*(canvas.width + %d)) { console.log(Math.floor(new Date().getTime()/1000.0) + \".\" + new Date().getTime()%%1000 + \",steer,\" + %d + \"px,\" + %d + \"px\"); open(\"%s\", \"_self\") }}", rectWidth, gapLength, gapHeight, &nextStage[0]); //rectheight = gap height
     output+= buffer;
     output+= "</script>\n";
     output+= "</div>\n</body>\n</html>\n";
