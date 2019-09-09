@@ -17,7 +17,7 @@ string startTask(string nextStage);
 string mSteer(int rectWidth, int rectHeight, int gapLength, int gapHeight, string nextStage);
 string mClick(int rectWidth, int rectHeight, int gapLength, string nextStage);
 string mDrag(int rectWidth, int rectHeight, int gapLength, string nextStage);
-int* generateRandomOrderArray(int num);
+int* generateRandomOrderArray(int* output, int start, int end);
 
 int main(int argc, const char * argv[]) {
     //generate starting page and tutorial
@@ -57,10 +57,10 @@ int main(int argc, const char * argv[]) {
     free(t3name);
     free(startTaskPage);
     
-    
+    /* previous pilot iteration of study: ALL TASKS RANDOMIZED
     //generate 120 (60 variations x 2 repetitions each) tasks in random order
     //be sure that the nums array has same number of elements as the nested loop below produces
-    int* nums = generateRandomOrderArray(120);
+    int* nums = generateRandomOrderArray(0, 120);
     int currentnum = 0;
     for (int rep = 0; rep <= 1; rep++){
         for (int l = 64; l <= 1024; l*= 2){
@@ -90,12 +90,71 @@ int main(int argc, const char * argv[]) {
             }
         }
     }
-    char* final = (char*) malloc(100);
-    sprintf(final, "%d.html", currentnum);
-    FILE* end = fopen(final, "w");
+     */
+    // New iteration of study: all steer tasks, all click tasks, all drag tasks at once. Order of task type is randomized.
+    int* taskOrder = (int*) malloc(sizeof(int) * 3);
+    generateRandomOrderArray(taskOrder, 0, 3); //0 is steer, 1 is point and click, 2 is drag and drop
+    int currentNum = 0;
+    for (int i = 0; i < 3; i++){
+        printf("Generating tasks with currnum %d to %d\n", currentNum, currentNum+40);
+        int* randomOrdered40Digits = (int*) malloc(sizeof(int) * 40);
+        generateRandomOrderArray(randomOrdered40Digits, currentNum, currentNum+40);
+        
+        char* curr = (char*) malloc(48 * sizeof(char));
+        char* next = (char*) malloc(48 * sizeof(char));
+        //20 task variations (dimensions change) of each type. Create 2x20 sequential tasks for each of the 3 task types.
+        if (taskOrder[i] == 0){
+            for (int l = 64; l <= 1024; l*= 2){
+                for (int w = 8; w <= 64; w*= 2){
+                    for (int rep = 0; rep <= 1; rep++){
+                        //name each html file a random number from 0-119 inclusive and link it to the i+1th html file
+                        sprintf(curr, "%d.html", randomOrdered40Digits[currentNum - i*40]);
+                        sprintf(next, "%d.html", randomOrdered40Digits[currentNum - i*40] + 1);
+                        FILE* steer = fopen(curr, "w");
+                        fprintf(steer, "%s", &mSteer(l, 200, l, 2*w, next)[0]);
+                        //note that gap width is doubled, as according to MouStress study
+                        fclose(steer);
+                        currentNum++;
+                    }
+                }
+            }
+        }
+        if (taskOrder[i] == 1){
+            for (int l = 64; l <= 1024; l*= 2){
+                for (int w = 8; w <= 64; w*= 2){
+                    for (int rep = 0; rep <= 1; rep++){
+                        sprintf(curr, "%d.html", randomOrdered40Digits[currentNum - i*40]);
+                        sprintf(next, "%d.html", randomOrdered40Digits[currentNum - i*40] + 1);
+                        FILE* click = fopen(curr, "w");
+                        fprintf(click, "%s", &mClick(w, 200, l, next)[0]);
+                        fclose(click);
+                        currentNum++;
+                    }
+                }
+            }
+        }
+        if (taskOrder[i] == 2){
+            for (int l = 64; l <= 1024; l*= 2){
+                for (int w = 8; w <= 64; w*= 2){
+                    for (int rep = 0; rep <= 1; rep++){
+                        sprintf(curr, "%d.html", randomOrdered40Digits[currentNum - i*40]);
+                        sprintf(next, "%d.html", randomOrdered40Digits[currentNum - i*40] + 1);
+                        FILE* drag = fopen(curr, "w");
+                        fprintf(drag, "%s", &mDrag(w, 200, l, next)[0]);
+                        fclose(drag);
+                        currentNum++;
+                    }
+                }
+            }
+        }
+    }
+    
+    char* endingPage = (char*) malloc(100);
+    sprintf(endingPage, "%d.html", currentNum);
+    FILE* end = fopen(endingPage, "w");
     fprintf(end, "<html>\n<h1>Task finished!</h1>\n</html>\n");
     fclose(end);
-    free(final);
+    free(endingPage);
     
     /*
     for (int i = 0; i < 4; i++, w*=2){
@@ -182,8 +241,11 @@ string mSteer(int rectWidth, int rectHeight, int gapLength, int gapHeight, strin
     output+= "<div id=\"div2\">\n";
     output+= "<img id=\"click2\" src=\"images/purple.png\" class=\"rectangle\">\n";
     output+= "<script>\n";
+    output+= "var startTimeExists = false;\n";
+    sprintf(buffer, "document.getElementById('can').onmousedown = function logStartTime() { if (!startTimeExists) { console.log(Math.floor(new Date().getTime()/1000.0) + \".\" + new Date().getTime()%%1000 + \",steer,\" + %d + \"px,\" + %d + \"px,\" + \"start\"); startTimeExists = true; } }\n", gapLength, gapHeight);
+    output+= buffer;
     output+= "function nextStage() {\n";
-    sprintf(buffer, "if (currX > 0.5*(canvas.width + %d)) { console.log(Math.floor(new Date().getTime()/1000.0) + \".\" + new Date().getTime()%%1000 + \",steer,\" + %d + \"px,\" + %d + \"px\"); open(\"%s\", \"_self\") }}", rectWidth, gapLength, gapHeight, &nextStage[0]); //rectheight = gap height
+    sprintf(buffer, "if (currX > 0.5*(canvas.width + %d)) { console.log(Math.floor(new Date().getTime()/1000.0) + \".\" + new Date().getTime()%%1000 + \",steer,\" + %d + \"px,\" + %d + \"px,\" + \"finish\"); open(\"%s\", \"_self\") }}\n", rectWidth, gapLength, gapHeight, &nextStage[0]); //rectheight = gap height
     output+= buffer;
     output+= "</script>\n";
     output+= "</div>\n</body>\n</html>\n";
@@ -232,7 +294,10 @@ string mClick(int rectWidth, int rectHeight, int gapLength, string nextStage){
     output+= "</body>\n";
     output+= "<script type=\"text/javascript\" src=\"click.js\"> </script>\n";
     output+= "<script>\n";
-    sprintf(buffer, "document.getElementById('div2').onclick = function nextStage() { if (document.getElementById('click1').src == document.getElementById('click2').src){ console.log(Math.floor(new Date().getTime()/1000.0) + \".\" + new Date().getTime()%%1000 + \",click,\" + %d + \"px,\" + %d + \"px\"); open(\"%s\", \"_self\"); } }\n", gapLength, rectWidth, &nextStage[0]);
+    output+= "var startTimeExists = false;\n";
+    sprintf(buffer, "document.getElementById('div1').onclick = function logStartTime() { if (!startTimeExists) { console.log(Math.floor(new Date().getTime()/1000.0) + \".\" + new Date().getTime()%%1000 + \",click,\" + %d + \"px,\" + %d + \"px,\" + \"start\"); changeYellow(); startTimeExists = true;} }\n", gapLength, rectWidth);
+    output+= buffer;
+    sprintf(buffer, "document.getElementById('div2').onclick = function nextStage() { if (document.getElementById('click1').src == document.getElementById('click2').src){ console.log(Math.floor(new Date().getTime()/1000.0) + \".\" + new Date().getTime()%%1000 + \",click,\" + %d + \"px,\" + %d + \"px,\" + \"finish\"); open(\"%s\", \"_self\"); } }\n", gapLength, rectWidth, &nextStage[0]);
     output+= buffer;
     output+= "</script>\n";
     output+= "</html>\n";
@@ -281,32 +346,39 @@ string mDrag(int rectWidth, int rectHeight, int gapLength, string nextStage) {
     output+= "</div>\n";
     output+= "</body>\n";
     output+= "<script type=\"text/javascript\" src=\"drag.js\"> </script>\n";
-    sprintf(buffer, "<script> function nextStage() { console.log(Math.floor(new Date().getTime()/1000.0) + \".\" + new Date().getTime()%%1000 + \",drag,\" + %d + \"px,\" + %d + \"px\"); open(\"%s\", \"_self\"); } </script>\n", gapLength, rectWidth, &nextStage[0]);
+    output+= "<script>\n";
+    output+= "var startTimeExists = false;\n";
+    sprintf(buffer, "function logStartTime() { if (!startTimeExists) { console.log(Math.floor(new Date().getTime()/1000.0) + \".\" + new Date().getTime()%%1000 + \",drag,\" + %d + \"px,\" + %d + \"px,\" + \"start\"); startTimeExists = true; } }\n", gapLength, rectWidth);
     output+= buffer;
+    sprintf(buffer, "function nextStage() { console.log(Math.floor(new Date().getTime()/1000.0) + \".\" + new Date().getTime()%%1000 + \",drag,\" + %d + \"px,\" + %d + \"px,\" + \"finish\"); open(\"%s\", \"_self\"); }\n", gapLength, rectWidth, &nextStage[0]);
+    output+= buffer;
+    output+="</script>\n";
     output+= "</html>\n";
     free(buffer);
 
     return output;
 }
 
-int* generateRandomOrderArray(int num){
-    int* output = (int*) malloc(num * sizeof(int));
-    for (int i = 0; i < num; i++){
-        output[i] = i;
+int* generateRandomOrderArray(int* output, int start, int end){
+    //generates an array of the numbers start, start + 1 ... end - 1
+    for (int i = start; i < end; i++){
+        output[i - start] = i;
     }
     //srand(unsigned(time(NULL))); doesn't actually seed random_shuffle; looks like it's independent
     //random_shuffle(output, output + num - 1);
     
     //manually implement fisher-yates shuffle on array of numbers
     srand(time(NULL));
-    for (int i = num - 1; i > 0; --i){
-        int j = rand() % (i+1);
+    for (int i = end-start-1; i > 0; --i){
+        int j = rand() % (i+1); //random index between 0 and current num's index, inclusive.
+        //swap current number with a number before it in the array
+        //iterate from last digit of the array to the 0th
         int t = output[i];
         output[i] = output[j];
         output[j] = t;
     }
     
-    for (int i = 0; i < num; i++){
+    for (int i = 0; i < end-start; i++){
         printf("%d\n", output[i]);
     }
     return output;
